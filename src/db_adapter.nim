@@ -1,13 +1,29 @@
 import os, macros, db_common, strutils
 import ./db_adapterpkg/common
 import ./db_adapterpkg/sqlite
+import ./db_adapterpkg/mysql
+import ./db_adapterpkg/postgres
+import ./db_adapterpkg/odbc
+
 {.experimental: "dotOperators".}
 
 # follow design: https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb
-
+type DbConnection*[T] = object
+        connection*: T
+        # kind*:DriverKind
+        case kind:DriverKind
+          of DriverKind.sqlite:
+            sqlite_adapter*:ptr SqliteAdapterRef[T]
+          of DriverKind.mysql:
+            mysql_adapter*:ptr MysqlAdapterRef[T]
+          of DriverKind.postgres:
+            postgres_adapter*:ptr PostgresAdapterRef[T]
+          of DriverKind.odbc:
+            odbc_adapter*:ptr OdbcAdapterRef[T]
 
 proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   let lib = ident(args[0])
+  let driver_type = args[0][3..args[0].high]
   let myDbConn = nnkDotExpr.newTree(
       lib,
       newIdentNode("DbConn")
@@ -28,7 +44,7 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   let adapterConstruct = nnkCommand.newTree(
     newIdentNode("new"),
       nnkBracketExpr.newTree(
-        newIdentNode("SqliteAdapterRef"),
+        newIdentNode(capitalizeAscii(driver_type) & "AdapterRef"),
         myDbConn
     ),
 
@@ -77,13 +93,20 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
     newIdentNode("connection"),
     conn
   ),
+  nnkExprColonExpr.newTree(
+    newIdentNode("kind"),
+    nnkDotExpr.newTree(
+      ident("DriverKind"),
+      newIdentNode(driver_type)
+    ),
+  ),
 
     nnkExprColonExpr.newTree(
-      newIdentNode("adapter"),
+      newIdentNode(driver_type & "adapter"),
       nnkCast.newTree(
         nnkPtrTy.newTree(
           nnkBracketExpr.newTree(
-            newIdentNode("AbstractAdapterRef"),
+            newIdentNode(capitalizeAscii(driver_type) & "AdapterRef"),
             myDbConn
     )
   ),
@@ -121,9 +144,31 @@ template `.()`*[T](con: DbConnection[T]; met: untyped; args: varargs[
 proc raw_connection*[T](self: DbConnection[T]): T =
   self.connection
 
+converter toSqliteAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr SqliteAdapterRef[T] =
+  cast[ptr SqliteAdapterRef[T]](x)
+
+converter toMysqlAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr MysqlAdapterRef[T] =
+  cast[ptr MysqlAdapterRef[T]](x)
+
+converter toPostgresAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr PostgresAdapterRef[T] =
+  cast[ptr PostgresAdapterRef[T]](x)
+
+converter toOdbcAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[T] =
+  cast[ptr OdbcAdapterRef[T]](x)
+
+proc get_adapter*[T](self: DbConnection[T]): auto =
+  case self.kind:
+    of DriverKind.sqlite:
+      self.sqlite_adapter
+    of DriverKind.mysql:
+      self.mysql_adapter
+    of DriverKind.postgres:
+      self.postgres_adapter
+    of DriverKind.odbc:
+      self.odbc_adapter
+
 proc get_database_version*[T](self: DbConnection[T]): int =
-  cast[ptr SqliteAdapterRef[T]](self.adapter).get_database_version
-  # self.adapter.get_database_version
+  self.get_adapter.get_database_version 
 
 when isMainModule:
   dumpAstGen:
@@ -138,4 +183,5 @@ when isMainModule:
   db.exec(sql"INSERT INTO my_table (id, name) VALUES (0, ?)",
   "Jack")
   assert db.get_database_version == 1
+  assert db.kind == DriverKind.sqlite
   db.close()
