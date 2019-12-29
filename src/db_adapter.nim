@@ -1,18 +1,9 @@
 import os,macros,db_common,strutils
+import ./db_adapterpkg/common
+import ./db_adapterpkg/sqlite
 {.experimental: "dotOperators".}
 
 # follow design: https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb
-
-type 
-  DriverKind* {.pure.} = enum
-    sqlite,
-    mysql,
-    postgres,
-    odbc
-
-
-type DbConnection*[T] = object
-        connection:T
 
 
 proc implInitDbConnection*(args:varargs[string]):NimNode {.compileTime.} =
@@ -70,8 +61,6 @@ template `.()`*[T](con: DbConnection[T], met:untyped, args:varargs[untyped] ): u
 proc raw_connection*[T](self:DbConnection[T]):T =
   self.connection
 
-proc get_database_version*[T](self:DbConnection[T]):int =
-  self.getValue(sql"PRAGMA schema_version;").parseInt
 
 when isMainModule:
   let db = initDbConnection( "sqlite",":memory:","","","")
