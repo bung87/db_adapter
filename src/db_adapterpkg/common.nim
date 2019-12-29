@@ -1,3 +1,4 @@
+{.experimental: "dotOperators".}
 
 type 
     DriverKind* {.pure.} = enum
@@ -6,6 +7,10 @@ type
       postgres,
       odbc
   
-  
+type
+  AbstractAdapterRef*[T] = ref AbstractAdapter[T]
+  AbstractAdapter*[T] = object of RootObj
+    conn*: T
 type DbConnection*[T] = object
-        connection*:T
+        connection*: T
+        adapter*:ptr AbstractAdapterRef[T]
