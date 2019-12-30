@@ -8,9 +8,10 @@ import ./db_adapterpkg/odbc
 {.experimental: "dotOperators".}
 
 # follow design: https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb
+
 type DbConnection*[T] = object
         connection*: T
-        # kind*:DriverKind
+        config*:ptr DbConfigRef
         case kind:DriverKind
           of DriverKind.sqlite:
             sqlite_adapter*:ptr SqliteAdapterRef[T]
@@ -24,6 +25,10 @@ type DbConnection*[T] = object
 proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   let lib = ident(args[0])
   let driver_type = args[0][3..args[0].high]
+  let host = newStrLitNode args[1]
+  let username = newStrLitNode args[2]
+  let password = newStrLitNode args[3]
+  let database = newStrLitNode args[4]
   let myDbConn = nnkDotExpr.newTree(
       lib,
       newIdentNode("DbConn")
@@ -33,10 +38,10 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
       lib,
       newIdentNode("open")
     ),
-    newStrLitNode args[1],
-    newStrLitNode args[2],
-    newStrLitNode args[3],
-    newStrLitNode args[4]
+    host,
+    username,
+    password,
+    database
   )
   let conn = ident("conn")
   let adapter = ident("adapter")
@@ -47,8 +52,44 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
         newIdentNode(capitalizeAscii(driver_type) & "AdapterRef"),
         myDbConn
     ),
-
   )
+  let configConstruct = nnkCommand.newTree(
+    newIdentNode("new"),
+    newIdentNode("DbConfigRef")
+  )
+  let config = ident("config")
+
+  let assignConfig = nnkStmtList.newTree(
+    nnkAsgn.newTree(
+      nnkDotExpr.newTree(
+        config,
+        newIdentNode("host")
+      ),
+      host
+    )
+    ,nnkAsgn.newTree(
+      nnkDotExpr.newTree(
+        config,
+        newIdentNode("username")
+      ),
+      username
+    ),
+    nnkAsgn.newTree(
+      nnkDotExpr.newTree(
+        config,
+        newIdentNode("password")
+      ),
+      password
+    ),
+    nnkAsgn.newTree(
+      nnkDotExpr.newTree(
+        config,
+        newIdentNode("database")
+      ),
+      database
+    ),
+  )
+
   result = nnkStmtList.newTree(
 
     nnkImportStmt.newTree(
@@ -74,6 +115,15 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
       )
     ),
 
+    nnkVarSection.newTree(
+      nnkIdentDefs.newTree(
+        config,
+        newEmptyNode(),
+        configConstruct
+      )
+    ),
+    assignConfig,
+
     nnkStmtList.newTree(
     nnkAsgn.newTree(
       nnkDotExpr.newTree(
@@ -81,8 +131,19 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
         newIdentNode("conn")
       ),
       conn
-    )
-  ),
+    ),
+
+    nnkAsgn.newTree(
+      nnkDotExpr.newTree(
+        adapter,
+        newIdentNode("config")
+      ),
+      nnkDotExpr.newTree(
+        config,
+        newIdentNode("addr")
+        )
+      )
+    ),
 
     nnkObjConstr.newTree(
       nnkBracketExpr.newTree(
@@ -99,6 +160,13 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
       ident("DriverKind"),
       newIdentNode(driver_type)
     ),
+  ),
+  nnkExprColonExpr.newTree(
+    newIdentNode("config"),
+    nnkDotExpr.newTree(
+          config,
+          newIdentNode("addr")
+    )
   ),
 
     nnkExprColonExpr.newTree(
