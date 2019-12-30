@@ -44,7 +44,7 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
     database
   )
   let conn = ident("conn")
-  let adapter = ident("adapter")
+  let adapter = genSym(nskVar,"adapter")
 
   let adapterConstruct = nnkCommand.newTree(
     newIdentNode("new"),
@@ -57,7 +57,7 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
     newIdentNode("new"),
     newIdentNode("DbConfigRef")
   )
-  let config = ident("config")
+  let config = gensym(nskVar,"config")
 
   let assignConfig = nnkStmtList.newTree(
     nnkAsgn.newTree(
@@ -194,20 +194,32 @@ macro initDbConnection*(driver, host, username, password, database: static[
 
   implInitDbConnection("db_" & driver, host, username, password, database)
 
-macro unpackMethodVarargs*(connection: untyped; met: untyped; args: varargs[
+macro unpackMethodVarargs*(obj: untyped; met: untyped; args: varargs[
     untyped]): untyped =
   result = newCall(nnkDotExpr.newTree(
-    connection,
+    obj,
     met
   ))
   for i in 0 ..< args.len:
     result.add args[i]
 
+proc adapter*[T](self: DbConnection[T]): auto =
+  case self.kind:
+    of DriverKind.sqlite:
+      self.sqlite_adapter
+    of DriverKind.mysql:
+      self.mysql_adapter
+    of DriverKind.postgres:
+      self.postgres_adapter
+    of DriverKind.odbc:
+      self.odbc_adapter
 
-template `.()`*[T](con: DbConnection[T]; met: untyped; args: varargs[
+template `.`*[T](con: DbConnection[T]; met: untyped; args: varargs[
     untyped]): untyped =
-  unpackMethodVarargs(con.connection, met, args)
-
+  when compiles(unpackMethodVarargs(con.connection, met, args)):
+    unpackMethodVarargs(con.connection, met, args)
+  elif compiles(unpackMethodVarargs(con.adapter, met, args)):
+    unpackMethodVarargs(con.adapter, met, args)
 
 proc raw_connection*[T](self: DbConnection[T]): T =
   self.connection
@@ -224,19 +236,6 @@ converter toPostgresAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr PostgresAdap
 converter toOdbcAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[T] =
   cast[ptr OdbcAdapterRef[T]](x)
 
-proc get_adapter*[T](self: DbConnection[T]): auto =
-  case self.kind:
-    of DriverKind.sqlite:
-      self.sqlite_adapter
-    of DriverKind.mysql:
-      self.mysql_adapter
-    of DriverKind.postgres:
-      self.postgres_adapter
-    of DriverKind.odbc:
-      self.odbc_adapter
-
-proc get_database_version*[T](self: DbConnection[T]): int =
-  self.get_adapter.get_database_version 
 
 when isMainModule:
   dumpAstGen:
@@ -250,6 +249,6 @@ when isMainModule:
                 )""")
   db.exec(sql"INSERT INTO my_table (id, name) VALUES (0, ?)",
   "Jack")
-  assert db.get_database_version == 1
   assert db.kind == DriverKind.sqlite
+  assert db.database_exists() == true
   db.close()
