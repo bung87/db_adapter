@@ -265,4 +265,5 @@ when isMainModule:
   assert db.database_exists() == true
   assert db.get_database_version == db.adapter.get_database_version 
   assert db.adapter.database_version == db.database_version
+  assert db.explain(sql"Select * from my_table").contains("SCAN TABLE my_table")
   db.close()

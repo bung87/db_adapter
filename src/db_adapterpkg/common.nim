@@ -1,5 +1,6 @@
 {.experimental: "dotOperators".}
 import ./utils
+import db_common
 export utils
 type 
     DriverKind* {.pure.} = enum
@@ -19,4 +20,28 @@ type
     conn*: T
     config*:ptr DbConfigRef
     database_version*:Version
+
+
+proc dbQuote*(s: string): string =
+  ## Escapes the `'` (single quote) char to `''`.
+  ## Because single quote is used for defining `VARCHAR` in SQL.
+  runnableExamples:
+    doAssert dbQuote("'") == "''''"
+    doAssert dbQuote("A Foobar's pen.") == "'A Foobar''s pen.'"
+
+  result = "'"
+  for c in items(s):
+    if c == '\'': add(result, "''")
+    else: add(result, c)
+  add(result, '\'')
+
+proc dbFormat*(formatstr: SqlQuery, args: varargs[string]): string =
+  result = ""
+  var a = 0
+  for c in items(string(formatstr)):
+    if c == '?':
+      add(result, dbQuote(args[a]))
+      inc(a)
+    else:
+      add(result, c)
 
