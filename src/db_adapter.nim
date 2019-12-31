@@ -4,6 +4,7 @@ import ./db_adapterpkg/sqlite
 import ./db_adapterpkg/mysql
 import ./db_adapterpkg/postgres
 import ./db_adapterpkg/odbc
+export sqlite,mysql,postgres,odbc,common
 
 {.experimental: "dotOperators".}
 
@@ -232,20 +233,20 @@ template `.`*[T](con: DbConnection[T]; met: untyped; args: varargs[
 proc raw_connection*[T](self: DbConnection[T]): T =
   self.connection
 
-converter toSqliteAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr SqliteAdapterRef[T] =
+converter toSqliteAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr SqliteAdapterRef[T] =
   cast[ptr SqliteAdapterRef[T]](x)
 
-converter toMysqlAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr MysqlAdapterRef[T] =
+converter toMysqlAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr MysqlAdapterRef[T] =
   cast[ptr MysqlAdapterRef[T]](x)
 
-converter toPostgresAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr PostgresAdapterRef[T] =
+converter toPostgresAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr PostgresAdapterRef[T] =
   cast[ptr PostgresAdapterRef[T]](x)
 
-converter toOdbcAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[T] =
+converter toOdbcAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[T] =
   cast[ptr OdbcAdapterRef[T]](x)
 
 
-when isMainModule:
+# when isMainModule:
   # dumpAstGen:
   #   # cast[ptr SqliteAdapterRef[T]](self.adapter)
   #   if self.database_version:
@@ -253,31 +254,4 @@ when isMainModule:
   #   else:
   #     self.database_version = body
   #     result = self.database_version
-  let db = initDbConnection("sqlite", ":memory:", "", "", "")
-  db.exec(sql"DROP TABLE IF EXISTS my_table")
-  db.exec(sql"""CREATE TABLE my_table (
-                  id   INTEGER,
-                  name VARCHAR(50) NOT NULL
-                )""")
-  db.exec(sql"INSERT INTO my_table (id, name) VALUES (0, ?)",
-  "Jack")
-  assert db.kind == DriverKind.sqlite
-  assert db.database_exists() == true
-  assert db.get_database_version == db.adapter.get_database_version 
-  assert db.adapter.database_version == db.database_version
-  assert db.explain(sql"Select * from my_table").contains("SCAN TABLE my_table")
-  assert db.table_create_statment("my_table").contains("CREATE TABLE my_table")
-  assert db.primary_keys("my_table") == @[]
-  db.exec(sql"""
-    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                          name VARCHAR(50) NOT NULL,
-                          password_digest varchar COLLATE ?);
-  ""","NOCASE")
-  assert db.primary_keys("users") == @["id"]
-  db.exec(sql"CREATE INDEX name_index ON users(name);")
-
-  assert db.table_indexs("users").len == 1
-  db.remove_index("name_index")
-  # assert db.table_indexs("users").len == 0 # no effect
-  echo db.adapter.foreign_keys("users")
-  db.close()
+ 

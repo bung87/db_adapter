@@ -1,7 +1,7 @@
 
 import macros
 
-import strutils,parseutils
+import strutils, parseutils
 
 type
   Version* = distinct string
@@ -19,8 +19,11 @@ proc isSpecial(ver: Version): bool =
 proc isValidVersion(v: string): bool =
   if v.len > 0:
     if v[0] in {'#'} + Digits: return true
-converter toBoolean*(ver:Version):bool = ($ver).len > 0
+
+converter toBoolean*(ver: Version): bool = ($ver).len > 0
+
 proc `==`*(ver: Version, ver2: Version): bool = $ver == $ver2
+
 proc `<`*(ver: Version, ver2: Version): bool =
   ## This is synced from Nimble's version module.
 
@@ -30,7 +33,6 @@ proc `<`*(ver: Version, ver2: Version): bool =
       return ($ver).normalize != "#head"
 
     if not ver2.isSpecial:
-      # `#aa111 < 1.1`
       return ($ver).normalize != "#head"
 
   # Handling for normal versions such as "0.1.0" or "1.0".
@@ -51,50 +53,48 @@ proc `<`*(ver: Version, ver2: Version): bool =
       return false
 
 
-macro cached_property*(s: string,prc:untyped):untyped =
-    if prc.kind notin {nnkProcDef, nnkLambda, nnkMethodDef, nnkDo}:
-        error("Cannot transform this node kind into an async proc." &
-              " proc/method definition or lambda node expected.")
-    let self = prc.params[1][0]
-    # let prcName = prc.name
-    # echo prcName
-    var outerProcBody = nnkStmtList.newTree(
-        nnkIfStmt.newTree(
-          nnkElifBranch.newTree(
-            nnkDotExpr.newTree(
-              self,
-              newIdentNode(s.strVal)
-            ),
-            nnkStmtList.newTree(
-              nnkAsgn.newTree(
-                newIdentNode("result"),
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                )
-              )
-            )
-          ),
-          nnkElse.newTree(
-            nnkStmtList.newTree(
-              nnkAsgn.newTree(
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                ),
-               prc.body
-              ),
-              nnkAsgn.newTree(
-                newIdentNode("result"),
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                )
-              )
-            )
-          )
-        )
+macro cached_property*(s: string, prc: untyped): untyped =
+  if prc.kind notin {nnkProcDef, nnkLambda, nnkMethodDef, nnkDo}:
+    error("Cannot transform this node kind into an cached_property proc." &
+          " proc/method definition or lambda node expected.")
+  let self = prc.params[1][0]
+  var outerProcBody = nnkStmtList.newTree(
+      nnkIfStmt.newTree(
+        nnkElifBranch.newTree(
+          nnkDotExpr.newTree(
+            self,
+            newIdentNode(s.strVal)
+    ),
+    nnkStmtList.newTree(
+      nnkAsgn.newTree(
+        newIdentNode("result"),
+        nnkDotExpr.newTree(
+          self,
+          newIdentNode(s.strVal)
       )
-    result = prc
-    result.body = outerProcBody
-    return result
+    )
+    )
+  ),
+        nnkElse.newTree(
+          nnkStmtList.newTree(
+            nnkAsgn.newTree(
+              nnkDotExpr.newTree(
+                self,
+                newIdentNode(s.strVal)
+    ),
+    prc.body
+  ),
+            nnkAsgn.newTree(
+              newIdentNode("result"),
+              nnkDotExpr.newTree(
+                self,
+                newIdentNode(s.strVal)
+    )
+  )
+    )
+  )
+    )
+  )
+  result = prc
+  result.body = outerProcBody
+  return result
