@@ -2,60 +2,12 @@ import db_common
 import ./common
 import os
 import macros
+import ./utils
 
 # https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters/sqlite3_adapter.rb
 type SqliteAdapter*[T] = object of AbstractAdapter[T]
     
 type SqliteAdapterRef*[T] = ref SqliteAdapter[T]
-
-
-macro cached_property(s: string,prc:untyped):untyped =
-    if prc.kind notin {nnkProcDef, nnkLambda, nnkMethodDef, nnkDo}:
-        error("Cannot transform this node kind into an async proc." &
-              " proc/method definition or lambda node expected.")
-    let self = prc.params[1][0]
-    # let prcName = prc.name
-    # echo prcName
-    var outerProcBody = nnkStmtList.newTree(
-        nnkIfStmt.newTree(
-          nnkElifBranch.newTree(
-            nnkDotExpr.newTree(
-              self,
-              newIdentNode(s.strVal)
-            ),
-            nnkStmtList.newTree(
-              nnkAsgn.newTree(
-                newIdentNode("result"),
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                )
-              )
-            )
-          ),
-          nnkElse.newTree(
-            nnkStmtList.newTree(
-              nnkAsgn.newTree(
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                ),
-               prc.body
-              ),
-              nnkAsgn.newTree(
-                newIdentNode("result"),
-                nnkDotExpr.newTree(
-                  self,
-                  newIdentNode(s.strVal)
-                )
-              )
-            )
-          )
-        )
-      )
-    result = prc
-    result.body = outerProcBody
-    return result
 
 proc get_database_version*[T](self:ptr SqliteAdapterRef[T]):Version {.cached_property:"database_version".}=
     Version(self.conn.getValue(sql"SELECT sqlite_version(*);"))

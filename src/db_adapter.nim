@@ -203,6 +203,12 @@ macro unpackMethodVarargs*(obj: untyped; met: untyped; args: varargs[
   for i in 0 ..< args.len:
     result.add args[i]
 
+macro unpackProperty*(obj: untyped; met: untyped;): untyped =
+  nnkDotExpr.newTree(
+    obj,
+    met
+  )
+
 proc adapter*[T](self: DbConnection[T]): auto =
   case self.kind:
     of DriverKind.sqlite:
@@ -220,6 +226,8 @@ template `.`*[T](con: DbConnection[T]; met: untyped; args: varargs[
     unpackMethodVarargs(con.connection, met, args)
   elif compiles(unpackMethodVarargs(con.adapter, met, args)):
     unpackMethodVarargs(con.adapter, met, args)
+  elif compiles(unpackProperty(con.adapter, met)):
+    unpackProperty(con.adapter, met)
 
 proc raw_connection*[T](self: DbConnection[T]): T =
   self.connection
@@ -255,6 +263,6 @@ when isMainModule:
   "Jack")
   assert db.kind == DriverKind.sqlite
   assert db.database_exists() == true
-  assert db.adapter.get_database_version == db.adapter.database_version
-
+  assert db.get_database_version == db.adapter.get_database_version 
+  assert db.adapter.database_version == db.database_version
   db.close()
