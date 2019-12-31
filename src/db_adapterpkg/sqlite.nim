@@ -80,7 +80,7 @@ proc table_structure*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[seq
 # end
 proc primary_keys*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[string]{.tags: [ReadDbEffect].} = 
     let rows = self.table_structure(table_name)
-    result = rows.mapIt( it[1])
+    result = rows.filterIt( it[5] == "1").mapIt( it[1])
 
 # proc remove_index*[T](self:ptr SqliteAdapterRef[T],table_name:string) {.tags: [WriteDbEffect].} =
 #     let index_name = index_name_for_remove(table_name, options)

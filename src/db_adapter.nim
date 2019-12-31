@@ -267,5 +267,5 @@ when isMainModule:
   assert db.adapter.database_version == db.database_version
   assert db.explain(sql"Select * from my_table").contains("SCAN TABLE my_table")
   assert db.table_create_statment("my_table").contains("CREATE TABLE my_table")
-  assert db.primary_keys("my_table") == @["id","name"]
+  assert db.primary_keys("my_table") == @[]
   db.close()
