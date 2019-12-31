@@ -6,7 +6,7 @@
 # To run these tests, simply execute `nimble test`.
 
 import unittest
-
+import strutils
 import db_adapter
 let db = initDbConnection("sqlite", ":memory:", "", "", "")
 test "test sqlite3":
@@ -22,7 +22,6 @@ test "test sqlite3":
   check db.database_exists() == true
   check db.get_database_version == db.adapter.get_database_version 
   check db.adapter.database_version == db.database_version
-  # cant pass in test
   check db.explain(sql"Select * from my_table").contains("SCAN TABLE my_table")
   check db.table_create_statment("my_table").contains("CREATE TABLE my_table")
   check db.primary_keys("my_table").len == 0
