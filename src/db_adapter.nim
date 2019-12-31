@@ -279,5 +279,5 @@ when isMainModule:
   assert db.table_indexs("users").len == 1
   db.remove_index("name_index")
   # assert db.table_indexs("users").len == 0 # no effect
-
+  echo db.adapter.foreign_keys("users")
   db.close()
