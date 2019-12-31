@@ -1,10 +1,10 @@
 import os, macros, db_common, strutils
 import ./db_adapterpkg/common
-import ./db_adapterpkg/sqlite
-import ./db_adapterpkg/mysql
-import ./db_adapterpkg/postgres
-import ./db_adapterpkg/odbc
-export sqlite,mysql,postgres,odbc,common
+import ./db_adapterpkg/sqlite_adapter
+import ./db_adapterpkg/mysql_adapter
+import ./db_adapterpkg/postgres_adapter
+import ./db_adapterpkg/odbc_adapter
+export sqlite_adapter,mysql_adapter,postgres_adapter,odbc_adapter,common
 
 {.experimental: "dotOperators".}
 
