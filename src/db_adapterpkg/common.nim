@@ -17,7 +17,7 @@ proc isSpecial(ver: Version): bool =
 proc isValidVersion(v: string): bool =
   if v.len > 0:
     if v[0] in {'#'} + Digits: return true
-
+converter toBoolean*(ver:Version):bool = ($ver).len > 0
 proc `<`*(ver: Version, ver2: Version): bool =
   ## This is synced from Nimble's version module.
 
@@ -65,4 +65,5 @@ type
   AbstractAdapter*[T] = object of RootObj
     conn*: T
     config*:ptr DbConfigRef
+    database_version*:Version
 

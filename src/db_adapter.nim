@@ -238,9 +238,13 @@ converter toOdbcAdapterRef[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[T
 
 
 when isMainModule:
-  dumpAstGen:
-    # cast[ptr SqliteAdapterRef[T]](self.adapter)
-    adapter.conn = conn
+  # dumpAstGen:
+  #   # cast[ptr SqliteAdapterRef[T]](self.adapter)
+  #   if self.database_version:
+  #     result = self.database_version
+  #   else:
+  #     self.database_version = body
+  #     result = self.database_version
   let db = initDbConnection("sqlite", ":memory:", "", "", "")
   db.exec(sql"DROP TABLE IF EXISTS my_table")
   db.exec(sql"""CREATE TABLE my_table (
@@ -251,4 +255,6 @@ when isMainModule:
   "Jack")
   assert db.kind == DriverKind.sqlite
   assert db.database_exists() == true
+  assert db.adapter.get_database_version == db.adapter.database_version
+
   db.close()
