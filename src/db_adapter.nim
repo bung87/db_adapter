@@ -268,4 +268,16 @@ when isMainModule:
   assert db.explain(sql"Select * from my_table").contains("SCAN TABLE my_table")
   assert db.table_create_statment("my_table").contains("CREATE TABLE my_table")
   assert db.primary_keys("my_table") == @[]
+  db.exec(sql"""
+    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                          name VARCHAR(50) NOT NULL,
+                          password_digest varchar COLLATE ?);
+  ""","NOCASE")
+  assert db.primary_keys("users") == @["id"]
+  db.exec(sql"CREATE INDEX name_index ON users(name);")
+
+  assert db.table_indexs("users").len == 1
+  db.remove_index("name_index")
+  # assert db.table_indexs("users").len == 0 # no effect
+
   db.close()

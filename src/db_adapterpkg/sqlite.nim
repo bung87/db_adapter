@@ -61,17 +61,27 @@ proc explain*[T](self:ptr SqliteAdapterRef[T],query: SqlQuery, args: varargs[str
     result.add "\n"
 
 # SCHEMA STATEMENTS ========================================
+
 proc table_create_statment*[T](self:ptr SqliteAdapterRef[T],table_name:string):string{.tags: [ReadDbEffect].} = 
+    # Result will have following sample string
+    # CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    #                       "password_digest" varchar COLLATE "NOCASE");
     let rows = self.conn.getAllRows(sql("""SELECT sql FROM
               (SELECT * FROM sqlite_master UNION ALL
                SELECT * FROM sqlite_temp_master)
             WHERE type = 'table' AND name = ? """),table_name)
     result = rows[0].join("") & ";"
 
-proc table_structure*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[seq[string]] {.tags: [ReadDbEffect].}= 
+proc table_structure*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[seq[string]] {.tags: [ReadDbEffect].} = 
     # @[@["0", "id", "INTEGER", "0", "", "0"], @["1", "name", "VARCHAR(50)", "1", "", "0"]]
     # cid      name          type     notnull  dflt_value  pk   
     result = self.conn.getAllRows(sql"PRAGMA table_info(?)",table_name)
+
+
+proc table_indexs*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[seq[string]] {.tags: [ReadDbEffect].} = 
+    # type                    name                tbl_name    rootpage    sql
+    result = self.conn.getAllRows(sql"SELECT * FROM sqlite_master WHERE type = ? AND tbl_name = ? ","index",table_name)
+
 
 # proc table_structure(table_name)
 #     structure = exec_query("PRAGMA table_info(?)",table_name)
@@ -82,6 +92,6 @@ proc primary_keys*[T](self:ptr SqliteAdapterRef[T],table_name:string):seq[string
     let rows = self.table_structure(table_name)
     result = rows.filterIt( it[5] == "1").mapIt( it[1])
 
-# proc remove_index*[T](self:ptr SqliteAdapterRef[T],table_name:string) {.tags: [WriteDbEffect].} =
-#     let index_name = index_name_for_remove(table_name, options)
-#     self.conn.exec sql"DROP INDEX ?",index_name
+proc remove_index*[T](self:ptr SqliteAdapterRef[T],index_name:string) {.tags: [WriteDbEffect].} =
+    self.conn.exec sql("DROP INDEX " & index_name)
+    
