@@ -6,6 +6,7 @@ import times
 import terminaltables
 import strutils
 import strscans
+import os,std/monotimes
 
 type transaction_isolation_levels* = enum
     read_uncommitted = "READ UNCOMMITTED"
@@ -115,16 +116,18 @@ template disable_referential_integrity *[T](self: ptr MysqlAdapterRef[T],body: u
 proc explain*[T](self: ptr MysqlAdapterRef[T], query: SqlQuery, args: varargs[
     string, `$`]): string {.tags: [ReadDbEffect].} =
     var q = dbFormat(query, args)
+    let start   = getMonoTime()
     let rows = self.conn.getAllRows sql("EXPLAIN " & q)
-    let start   = cpuTime()
+    let elapsed = getMonoTime() - start
+    let sec = elapsed.inMilliseconds.BiggestFloat / 1000.0
     var t = newUnicodeTable()
-    t.setHeaders(@["ID", "Name", "Fav animal", "Date", "OK"])
-    t.addRow(@["1", "xmonader", "Cat, Dog", "2018-10-2", "yes"])
-    t.addRow(@["2", "ahmed", "Shark", "2018-10-2", "yes"])
-    t.addRow(@["3", "dr who", "Humans", "1018-5-2", "no"])
+    t.setHeaders(@["id", "select_type", "table", "type" , "possible_keys", "key" ,"key_len" ,"ref" ,"rows","Extra"])
+    t.addRows(rows)
     let table = render(t)
     # 2 rows in set (0.00 sec)
-    let elapsed = initDuration(seconds = cpuTime() - start).inSeconds
+    result = table & "$1 rows in set ($2 sec)" % [len(rows),sec.formatFloat(ffDecimal, 2)]
+
+    
 
 # https://github.com/rails/rails/tree/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters#L133
 
@@ -194,6 +197,6 @@ proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool =
         self.database_version >= "5.7.6"
 
 when isMainModule:
+    
     let v = 50730.intToStr
     assert version_string(v) == "5.7.30"
-    
