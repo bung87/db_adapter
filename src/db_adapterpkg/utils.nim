@@ -98,3 +98,16 @@ macro cached_property*(s: string, prc: untyped): untyped =
   result = prc
   result.body = outerProcBody
   return result
+
+proc ndigits*(input: string; intVal: var int; start: int; n: int): int =
+  # matches exactly ``n`` digits. Matchers need to return 0 if nothing
+  # matched or otherwise the number of processed chars.
+  var x = 0
+  var i = 0
+  while i < n and i+start < input.len and input[i+start] in {'0'..'9'}:
+      x = x * 10 + input[i+start].ord - '0'.ord
+      inc i
+  # only overwrite if we had a match
+  if i == n:
+      result = n
+      intVal = x
