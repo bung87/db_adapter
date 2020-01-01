@@ -14,14 +14,19 @@ type transaction_isolation_levels* = enum
     repeatable_read =  "REPEATABLE READ"
     serializable =     "SERIALIZABLE"
  
+# proc version_string(full_version_string: string): string =
+#     # "50730" Py_mysql(self.conn).get_server_version
+#     var X,YY,ZZ:int
+#     discard scanf(full_version_string, "${ndigits(1)}${ndigits(2)}${ndigits(2)}", X, YY, ZZ)
+#     result = [X,YY,ZZ].join(".")
+
 proc version_string(full_version_string: string): string =
-    var X,YY,ZZ:int
-    discard scanf(full_version_string, "${ndigits(1)}${ndigits(2)}${ndigits(2)}", X, YY, ZZ)
-    result = [X,YY,ZZ].join(".")
+    # 5.7.27-0ubuntu0.18.04.1
+    full_version_string.match(re"^(?:5\.5\.5-)?(\d+\.\d+\.\d+)").get.captures[0]
 
 proc full_version*[T](self: ptr MysqlAdapterRef[T]): string {.
         cached_property: "full_version_string".} =
-    result = PMySQL(self.conn).get_server_version.intToStr
+    result = $(cast[ptr St_mysql](self.conn).get_server_info)
 
 proc get_database_version*[T](self: ptr MysqlAdapterRef[T]): Version {.
         cached_property: "database_version".} =
@@ -196,7 +201,6 @@ proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool =
     else:
         self.database_version >= "5.7.6"
 
-when isMainModule:
+
     
-    let v = 50730.intToStr
-    assert version_string(v) == "5.7.30"
+    
