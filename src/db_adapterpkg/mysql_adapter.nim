@@ -5,9 +5,6 @@ import nre
 import times
 import terminaltables
 
-type MysqlAdapter*[T] = object of AbstractAdapter[T]
-    full_version_string: string
-type MysqlAdapterRef*[T] = ref MysqlAdapter[T]
 
 type transaction_isolation_levels* = enum
     read_uncommitted = "READ UNCOMMITTED"
@@ -166,6 +163,7 @@ proc collation*[T](self: ptr MysqlAdapterRef[T]): string =
     self.show_variable "collation_database"
 
 # proc table_comment*[T](self: ptr MysqlAdapterRef[T],table_name:string): string =
+# TABLE_SCHEMA The name of the schema (database) to which the table belongs.
 #     scope = quoted_scope(table_name)
 
 #     query_value(<<~SQL, "SCHEMA").presence
@@ -185,4 +183,9 @@ proc collation*[T](self: ptr MysqlAdapterRef[T]): string =
 # SHOW VARIABLES LIKE 'name'
 proc show_variable*[T](self: ptr MysqlAdapterRef[T],name:string): string =
     self.conn.getValue( sql("SELECT @@" & name) )
-
+    
+proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool = 
+    if self.mariadb:
+        false 
+    else:
+        self.database_version >= "5.7.6"

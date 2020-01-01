@@ -21,6 +21,21 @@ type
     config*:ptr DbConfigRef
     database_version*:Version
 
+type PostgresAdapter*[T] = object of AbstractAdapter[T]
+type PostgresAdapterRef*[T] = ref PostgresAdapter[T]
+
+
+type MysqlAdapter*[T] = object of AbstractAdapter[T]
+  full_version_string: string
+
+type MysqlAdapterRef*[T] = ref MysqlAdapter[T]
+
+type OdbcAdapter*[T] = object of AbstractAdapter[T]
+type OdbcAdapterRef*[T] = ref OdbcAdapter[T]
+
+type SqliteAdapter*[T] = object of AbstractAdapter[T]
+
+type SqliteAdapterRef*[T] = ref SqliteAdapter[T]
 
 proc dbQuote*(s: string): string =
   ## Escapes the `'` (single quote) char to `''`.

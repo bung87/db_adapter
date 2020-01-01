@@ -6,9 +6,7 @@ import ./utils
 import sequtils
 
 # https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters/sqlite3_adapter.rb
-type SqliteAdapter*[T] = object of AbstractAdapter[T]
 
-type SqliteAdapterRef*[T] = ref SqliteAdapter[T]
 
 
 # https://github.com/nim-lang/Nim/blob/version-1-0/lib/impure/db_sqlite.nim#L306
