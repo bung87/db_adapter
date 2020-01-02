@@ -6,14 +6,17 @@ import times
 import terminaltables
 import strutils
 import strscans
-import os,std/monotimes
+import os, std/monotimes
+
+include private/mysql/schema_statements
+include private/mysql/quoting
 
 type transaction_isolation_levels* = enum
     read_uncommitted = "READ UNCOMMITTED"
     read_committed = "READ COMMITTED"
-    repeatable_read =  "REPEATABLE READ"
-    serializable =     "SERIALIZABLE"
- 
+    repeatable_read = "REPEATABLE READ"
+    serializable = "SERIALIZABLE"
+
 # proc version_string(full_version_string: string): string =
 #     # "50730" Py_mysql(self.conn).get_server_version
 #     var X,YY,ZZ:int
@@ -35,8 +38,8 @@ proc get_database_version*[T](self: ptr MysqlAdapterRef[T]): Version {.
 
 proc database_exists*[T](self: ptr MysqlAdapterRef[T]): bool =
     try:
-        let db = open(self.config[].host, self.config[].username, self.config[].password,
-                self.config[].database)
+        let db = open(self.config[].host, self.config[].username, self.config[
+            ].password, self.config[].database)
         result = true
     except:
         result = false
@@ -106,12 +109,13 @@ proc supports_savepoints*[T](self: ptr MysqlAdapterRef[T]): bool = true
 
 proc supports_lazy_transactions*[T](self: ptr MysqlAdapterRef[T]): bool = true
 
-template disable_referential_integrity *[T](self: ptr MysqlAdapterRef[T],body: untyped) =
-    
+template disable_referential_integrity *[T](self: ptr MysqlAdapterRef[T],
+        body: untyped) =
+
     old = self.conn.getValue(sql("SELECT @@FOREIGN_KEY_CHECKS"))
     self.conn.exec(sql"SET FOREIGN_KEY_CHECKS = 0")
     body
-    self.conn.exec(sql"SET FOREIGN_KEY_CHECKS = ?",old)
+    self.conn.exec(sql"SET FOREIGN_KEY_CHECKS = ?", old)
 
 
 # DATABASE STATEMENTS ======================================
@@ -121,26 +125,29 @@ template disable_referential_integrity *[T](self: ptr MysqlAdapterRef[T],body: u
 proc explain*[T](self: ptr MysqlAdapterRef[T], query: SqlQuery, args: varargs[
     string, `$`]): string {.tags: [ReadDbEffect].} =
     var q = dbFormat(query, args)
-    let start   = getMonoTime()
+    let start = getMonoTime()
     let rows = self.conn.getAllRows sql("EXPLAIN " & q)
     let elapsed = getMonoTime() - start
     let sec = elapsed.inMilliseconds.BiggestFloat / 1000.0
     var t = newUnicodeTable()
-    t.setHeaders(@["id", "select_type", "table", "type" , "possible_keys", "key" ,"key_len" ,"ref" ,"rows","Extra"])
+    t.setHeaders(@["id", "select_type", "table", "type", "possible_keys", "key",
+            "key_len", "ref", "rows", "Extra"])
     t.addRows(rows)
     let table = render(t)
     # 2 rows in set (0.00 sec)
-    result = table & "$1 rows in set ($2 sec)" % [len(rows),sec.formatFloat(ffDecimal, 2)]
+    result = table & "$1 rows in set ($2 sec)" % [len(rows), sec.formatFloat(
+            ffDecimal, 2)]
 
-    
+
 
 # https://github.com/rails/rails/tree/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters#L133
 
-proc begin_db_transaction*[T](self: ptr MysqlAdapterRef[T]) = 
-        self.conn.exec "BEGIN"
-      
+proc begin_db_transaction*[T](self: ptr MysqlAdapterRef[T]) =
+    self.conn.exec "BEGIN"
 
-proc begin_isolated_db_transaction*[T](self: ptr MysqlAdapterRef[T],isolation:transaction_isolation_levels) = 
+
+proc begin_isolated_db_transaction*[T](self: ptr MysqlAdapterRef[T],
+        isolation: transaction_isolation_levels) =
     self.conn.exec "SET TRANSACTION ISOLATION LEVEL " & $isolation
     self.begin_db_transaction
 
@@ -153,13 +160,14 @@ proc exec_rollback_db_transaction*[T](self: ptr MysqlAdapterRef[T]) =
     self.conn.exec "ROLLBACK"
 
 
-proc empty_insert_statement_value*[T](self: ptr MysqlAdapterRef[T],primary_key:string):string = 
+proc empty_insert_statement_value*[T](self: ptr MysqlAdapterRef[T],
+        primary_key: string): string =
     "VALUES ()"
-    
+
 # SCHEMA STATEMENTS ========================================
 
-proc drop_database*[T](self: ptr MysqlAdapterRef[T],name:string) =
-    self.conn.exec sql"DROP DATABASE IF EXISTS ? ",name
+proc drop_database*[T](self: ptr MysqlAdapterRef[T], name: string) =
+    self.conn.exec sql"DROP DATABASE IF EXISTS ? ", name
 
 
 proc current_database*[T](self: ptr MysqlAdapterRef[T]): string =
@@ -173,34 +181,34 @@ proc charset*[T](self: ptr MysqlAdapterRef[T]): string =
 proc collation*[T](self: ptr MysqlAdapterRef[T]): string =
     self.show_variable "collation_database"
 
-# proc table_comment*[T](self: ptr MysqlAdapterRef[T],table_name:string): string =
-# TABLE_SCHEMA The name of the schema (database) to which the table belongs.
-#     scope = quoted_scope(table_name)
+proc table_comment*[T](self: ptr MysqlAdapterRef[T],
+        table_name: string): string =
+    # TABLE_SCHEMA The name of the schema (database) to which the table belongs.
+    let scope = quoted_scope(table_name)
 
-#     query_value(<<~SQL, "SCHEMA").presence
-#     SELECT table_comment
-#     FROM information_schema.tables
-#     WHERE table_schema = #{scope[:schema]}
-#         AND table_name = #{scope[:name]}
-#     SQL
+    self.conn.getValue(sql("""
+    SELECT table_comment
+    FROM information_schema.tables
+    WHERE table_schema = $1
+        AND table_name = $2
+    """ % [scope.schema, scope.name]))
 
 
-# def change_table_comment(table_name, comment_or_changes) # :nodoc:
-# comment = extract_new_comment_value(comment_or_changes)
-# comment = "" if comment.nil?
-# execute("ALTER TABLE #{quote_table_name(table_name)} COMMENT #{quote(comment)}")
-# end
+proc change_table_comment*[T](self: ptr MysqlAdapterRef[T], table_name: string,
+        comment_or_changes: Change ) =
+    let comment = extract_new_comment_value(comment_or_changes)
+    self.conn.exec("ALTER TABLE $1 COMMENT $2" % [quote_table_name(
+            table_name), quote(comment)])
 
 # SHOW VARIABLES LIKE 'name'
-proc show_variable*[T](self: ptr MysqlAdapterRef[T],name:string): string =
-    self.conn.getValue( sql("SELECT @@" & name) )
-    
-proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool = 
+proc show_variable*[T](self: ptr MysqlAdapterRef[T], name: string): string =
+    self.conn.getValue(sql("SELECT @@" & name))
+
+proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool =
     if self.mariadb:
-        false 
+        false
     else:
         self.database_version >= "5.7.6"
 
 
-    
-    
+

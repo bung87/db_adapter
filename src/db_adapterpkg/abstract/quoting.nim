@@ -50,3 +50,12 @@ proc quote*(value:string):string =
     # end
     var x = value
     type_quote(x.toAny)
+
+# Quotes the column name. Defaults to no quoting.
+proc quote_column_name*(column_name:string):string =
+    column_name
+
+
+# Quotes the table name. Defaults to column name quoting.
+proc quote_table_name*(table_name:string) :string =
+    quote_column_name(table_name)
