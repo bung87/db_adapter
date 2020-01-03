@@ -1,5 +1,5 @@
 import typeinfo
-import nre
+import regex
 import strutils
 
 proc quote_string(s:string): string = 

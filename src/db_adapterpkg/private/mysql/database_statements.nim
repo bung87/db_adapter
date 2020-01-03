@@ -1,5 +1,5 @@
 import ../../common
-import nre
+import regex
 import db_common
 import sequtils,strutils
 # https://github.com/rails/rails/blob/98a57aa5f610bc66af31af409c72173cdeeb3c9e/activerecord/lib/active_record/connection_adapters/mysql/database_statements.rb
@@ -17,7 +17,7 @@ let READ_QUERY = build_read_query_regexp("begin", "commit", "explain", "select",
 
 proc write_query(sql:string): bool =
     
-    not sql.match(READ_QUERY).isSome
+    not sql.contains(READ_QUERY)
 
 proc write_query*[T](self: ptr MysqlAdapterRef[T],sql:SqlQuery): bool =
     write_query(sql.string)

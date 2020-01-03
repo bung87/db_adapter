@@ -1,5 +1,5 @@
 import ../../common
-import nre
+import regex
 
 # https://github.com/rails/rails/blob/aeba121a83965d242ed6d7fd46e9c166079a3230/activerecord/lib/active_record/connection_adapters/mysql/quoting.rb
 

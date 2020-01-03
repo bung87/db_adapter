@@ -1,5 +1,5 @@
 
-import nre
+import regex
 import ../../abstract/quoting
 import ../../common
 
@@ -13,9 +13,9 @@ type Change* = object
     to*:string
 
 proc extract_schema_qualified_name(str: string): (string, string) =
-    let r = str.findAll(re"[^`.\s]+|`[^`]*`")
+    let r = str.findAndCaptureAll(re"[^`.\s]+|`[^`]*`")
     if r.len > 1:
-        result = (r[0], r[1])
+        result = (r[0],r[1])
     else:
         result = ("", r[0])
 
@@ -46,5 +46,4 @@ proc row_format_dynamic_by_default*[T](self: ptr MysqlAdapterRef[T]):bool =
         self.database_version >= "5.7.9"
 
 when isMainModule:
-    echo "`aaa`.`bb`".findAll(re"[^`.\s]+|`[^`]*`")
     echo extract_schema_qualified_name("`aaa`.`bb`")

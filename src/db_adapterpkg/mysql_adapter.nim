@@ -1,11 +1,10 @@
 import db_common
 import ./common
 import db_mysql, mysql
-import nre
+import regex
 import times
 import terminaltables
 import strutils
-import strscans
 import os, std/monotimes
 import sequtils
 
@@ -29,7 +28,9 @@ type Options = object
 
 proc version_string(full_version_string: string): string =
     # 5.7.27-0ubuntu0.18.04.1
-    full_version_string.match(re"^(?:5\.5\.5-)?(\d+\.\d+\.\d+)").get.captures[0]
+    var m: regex.RegexMatch
+    discard full_version_string.match(re"^(?:5\.5\.5-)?(\d+\.\d+\.\d+)",m)
+    full_version_string[m.group(1)[0]]
 
 proc full_version*[T](self: ptr MysqlAdapterRef[T]): string {.
         cached_property: "full_version_string".} =
