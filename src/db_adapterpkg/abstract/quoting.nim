@@ -15,8 +15,10 @@ proc unquoted_false:bool = false
 
 proc type_quote(value:Any): string =
     case value.kind
-        of akString,akCString:
-            result = "'$1'" % quote_string($value)
+        of akString:
+            result = "'$1'" % quote_string(value.getString)
+        of akCString:
+            result = "'$1'" % quote_string($value.getCString)
         of akBool:
             let v = value.getBool
             if v:

@@ -1,6 +1,7 @@
 
 import nre
 import ../../abstract/quoting
+import ../../common
 
 type Scope* = object
     schema: string
@@ -13,7 +14,10 @@ type Change* = object
 
 proc extract_schema_qualified_name(str: string): (string, string) =
     let r = str.findAll(re"[^`.\s]+|`[^`]*`")
-    result = (r[0], r[1])
+    if r.len > 1:
+        result = (r[0], r[1])
+    else:
+        result = ("", r[0])
 
 
 proc quoted_scope*(name = "", typ = ""): Scope =
@@ -34,6 +38,12 @@ proc extract_new_default_value*(change:string) :string =
 
 proc extract_new_comment_value*(change:Change):string = extract_new_default_value(change)
 proc extract_new_comment_value*(change:string):string = extract_new_default_value(change)
+
+proc row_format_dynamic_by_default*[T](self: ptr MysqlAdapterRef[T]):bool =
+    if self.mariadb:
+        self.database_version >= "10.2.2"
+    else:
+        self.database_version >= "5.7.9"
 
 when isMainModule:
     echo "`aaa`.`bb`".findAll(re"[^`.\s]+|`[^`]*`")

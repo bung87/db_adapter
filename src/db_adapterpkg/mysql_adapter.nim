@@ -7,6 +7,7 @@ import terminaltables
 import strutils
 import strscans
 import os, std/monotimes
+import sequtils
 
 include private/mysql/schema_statements
 include private/mysql/quoting
@@ -17,11 +18,14 @@ type transaction_isolation_levels* = enum
     repeatable_read = "REPEATABLE READ"
     serializable = "SERIALIZABLE"
 
-# proc version_string(full_version_string: string): string =
-#     # "50730" Py_mysql(self.conn).get_server_version
-#     var X,YY,ZZ:int
-#     discard scanf(full_version_string, "${ndigits(1)}${ndigits(2)}${ndigits(2)}", X, YY, ZZ)
-#     result = [X,YY,ZZ].join(".")
+type Options = object
+    collation: string
+    charset: string
+ # proc version_string(full_version_string: string): string =
+ #     # "50730" Py_mysql(self.conn).get_server_version
+ #     var X,YY,ZZ:int
+ #     discard scanf(full_version_string, "${ndigits(1)}${ndigits(2)}${ndigits(2)}", X, YY, ZZ)
+ #     result = [X,YY,ZZ].join(".")
 
 proc version_string(full_version_string: string): string =
     # 5.7.27-0ubuntu0.18.04.1
@@ -166,6 +170,21 @@ proc empty_insert_statement_value*[T](self: ptr MysqlAdapterRef[T],
 
 # SCHEMA STATEMENTS ========================================
 
+proc create_database*[T](self: ptr MysqlAdapterRef[T], name: string,
+        options: Options) =
+    if options.collation.len > 0:
+        self.conn.exec sql("CREATE DATABASE $1 DEFAULT COLLATE $2" % [
+                quote_table_name(name), quote_table_name(options.collation)])
+    elif options.charset.len > 0:
+        self.conn.exec sql("CREATE DATABASE $1 DEFAULT CHARACTER SET $2" % [
+                quote_table_name(name), quote_table_name(options.charset)])
+    elif self.row_format_dynamic_by_default:
+        self.conn.exec "CREATE DATABASE $1 DEFAULT CHARACTER SET `utf8mb4`" %
+                quote_table_name(name)
+    else:
+        raise newException(ValueError, "Configure a supported :charset and ensure innodb_large_prefix is enabled to support indexes on varchar(255) string columns.")
+
+
 proc drop_database*[T](self: ptr MysqlAdapterRef[T], name: string) =
     self.conn.exec sql"DROP DATABASE IF EXISTS ? ", name
 
@@ -195,7 +214,7 @@ proc table_comment*[T](self: ptr MysqlAdapterRef[T],
 
 
 proc change_table_comment*[T](self: ptr MysqlAdapterRef[T], table_name: string,
-        comment_or_changes: Change ) =
+        comment_or_changes: Change) =
     let comment = extract_new_comment_value(comment_or_changes)
     self.conn.exec("ALTER TABLE $1 COMMENT $2" % [quote_table_name(
             table_name), quote(comment)])
@@ -210,5 +229,34 @@ proc supports_rename_index*[T](self: ptr MysqlAdapterRef[T]): bool =
     else:
         self.database_version >= "5.7.6"
 
+proc create_table_info*[T](self: ptr MysqlAdapterRef[T],
+        table_name: string): string =
+    self.conn.getRow(sql"SHOW CREATE TABLE $1" % quote_table_name(table_name))[1]
 
 
+proc primary_keys*[T](self: ptr MysqlAdapterRef[T], table_name: string): seq[
+        string]{.tags: [ReadDbEffect].} =
+
+    let scope = quoted_scope(table_name)
+    
+    let rows = self.conn.getAllRows sql """
+      SELECT column_name
+      FROM information_schema.statistics
+      WHERE index_name = 'PRIMARY'
+        AND table_schema = $1
+        AND table_name = $2
+      ORDER BY seq_in_index
+    """ % [scope.schema, scope.name]
+    result = rows.mapIt(it[0])
+
+proc strict_mode*[T](self: ptr MysqlAdapterRef[T]):bool =
+    self.config.strict == "true"
+
+proc check_version*[T](self: ptr MysqlAdapterRef[T]) =
+    if self.database_version < "5.5.8":
+      raise newException(ValueError,"Your version of MySQL ($1) is too old. Active Record supports MySQL >= 5.5.8." % self.database_version)
+
+when isMainModule:
+    let adapter = new MysqlAdapterRef[db_mysql.DbConn]
+    adapter.conn = db_mysql.open("localhost","","","cms")
+    echo adapter.unsafeAddr.primary_keys("auth_user")
