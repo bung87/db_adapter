@@ -26,15 +26,7 @@ proc `==`*(ver: Version, ver2: Version): bool = $ver == $ver2
 
 proc `<`*(ver: Version, ver2: Version): bool =
   ## This is synced from Nimble's version module.
-
-  # Handling for special versions such as "#head" or "#branch".
-  if ver.isSpecial or ver2.isSpecial:
-    if ver2.isSpecial and ($ver2).normalize == "#head":
-      return ($ver).normalize != "#head"
-
-    if not ver2.isSpecial:
-      return ($ver).normalize != "#head"
-
+ 
   # Handling for normal versions such as "0.1.0" or "1.0".
   var sVer = string(ver).split('.')
   var sVer2 = string(ver2).split('.')
