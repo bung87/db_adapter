@@ -12,5 +12,5 @@ bin           = @["db_adapter"]
 
 # Dependencies
 
-requires "nim >= 1.1.1"
+requires "nim >= 1.2.0" #2916080 
 requires "terminaltables"

@@ -8,24 +8,24 @@ export sqlite_adapter,mysql_adapter,postgres_adapter,odbc_adapter,common
 
 {.experimental: "dotOperators".}
 
-# follow design: https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb
+# follow design: https://github.com/rails/rails/blob/master/activerecord/lib/activeRecord/connectionAdapters/abstractAdapter.rb
 
 type DbConnection*[T] = object
         connection*: T
         config*:ptr DbConfigRef
         case kind:DriverKind
           of DriverKind.sqlite:
-            sqlite_adapter*:ptr SqliteAdapterRef[T]
+            sqliteAdapter*:ptr SqliteAdapterRef[T]
           of DriverKind.mysql:
-            mysql_adapter*:ptr MysqlAdapterRef[T]
+            mysqlAdapter*:ptr MysqlAdapterRef[T]
           of DriverKind.postgres:
-            postgres_adapter*:ptr PostgresAdapterRef[T]
+            postgresAdapter*:ptr PostgresAdapterRef[T]
           of DriverKind.odbc:
-            odbc_adapter*:ptr OdbcAdapterRef[T]
+            odbcAdapter*:ptr OdbcAdapterRef[T]
 
 proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   let lib = ident(args[0])
-  let driver_type = args[0][3..args[0].high]
+  let driverType = args[0][3..args[0].high]
   let host = newStrLitNode args[1]
   let username = newStrLitNode args[2]
   let password = newStrLitNode args[3]
@@ -50,7 +50,7 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   let adapterConstruct = nnkCommand.newTree(
     newIdentNode("new"),
       nnkBracketExpr.newTree(
-        newIdentNode(capitalizeAscii(driver_type) & "AdapterRef"),
+        newIdentNode(capitalizeAscii(driverType) & "AdapterRef"),
         myDbConn
     ),
   )
@@ -159,7 +159,7 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
     newIdentNode("kind"),
     nnkDotExpr.newTree(
       ident("DriverKind"),
-      newIdentNode(driver_type)
+      newIdentNode(driverType)
     ),
   ),
   nnkExprColonExpr.newTree(
@@ -171,11 +171,11 @@ proc implInitDbConnection*(args: varargs[string]): NimNode {.compileTime.} =
   ),
 
     nnkExprColonExpr.newTree(
-      newIdentNode(driver_type & "adapter"),
+      newIdentNode(driverType & "adapter"),
       nnkCast.newTree(
         nnkPtrTy.newTree(
           nnkBracketExpr.newTree(
-            newIdentNode(capitalizeAscii(driver_type) & "AdapterRef"),
+            newIdentNode(capitalizeAscii(driverType) & "AdapterRef"),
             myDbConn
     )
   ),
@@ -213,13 +213,13 @@ macro unpackProperty*(obj: untyped; met: untyped;): untyped =
 proc adapter*[T](self: DbConnection[T]): auto =
   case self.kind:
     of DriverKind.sqlite:
-      self.sqlite_adapter
+      self.sqliteAdapter
     of DriverKind.mysql:
-      self.mysql_adapter
+      self.mysqlAdapter
     of DriverKind.postgres:
-      self.postgres_adapter
+      self.postgresAdapter
     of DriverKind.odbc:
-      self.odbc_adapter
+      self.odbcAdapter
 
 template `.`*[T](con: DbConnection[T]; met: untyped; args: varargs[
     untyped]): untyped =
@@ -230,7 +230,7 @@ template `.`*[T](con: DbConnection[T]; met: untyped; args: varargs[
   elif compiles(unpackProperty(con.adapter, met)):
     unpackProperty(con.adapter, met)
 
-proc raw_connection*[T](self: DbConnection[T]): T =
+proc rawConnection*[T](self: DbConnection[T]): T =
   self.connection
 
 converter toSqliteAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr SqliteAdapterRef[T] =
@@ -249,9 +249,9 @@ converter toOdbcAdapterRef*[T](x: ptr AbstractAdapterRef[T]):ptr OdbcAdapterRef[
 # when isMainModule:
   # dumpAstGen:
   #   # cast[ptr SqliteAdapterRef[T]](self.adapter)
-  #   if self.database_version:
-  #     result = self.database_version
+  #   if self.databaseVersion:
+  #     result = self.databaseVersion
   #   else:
-  #     self.database_version = body
-  #     result = self.database_version
+  #     self.databaseVersion = body
+  #     result = self.databaseVersion
  

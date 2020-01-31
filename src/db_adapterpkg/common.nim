@@ -19,14 +19,14 @@ type
   AbstractAdapter*[T] = object of RootObj
     conn*: T
     config*:ptr DbConfigRef
-    database_version*:Version
+    databaseVersion*:Version
 
 type PostgresAdapter*[T] = object of AbstractAdapter[T]
 type PostgresAdapterRef*[T] = ref PostgresAdapter[T]
 
 
 type MysqlAdapter*[T] = object of AbstractAdapter[T]
-  full_version_string: string
+  fullVersionString: string
 
 type MysqlAdapterRef*[T] = ref MysqlAdapter[T]
 

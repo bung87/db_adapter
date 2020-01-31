@@ -12,7 +12,7 @@ type Change* = object
     `frm`*:string
     to*:string
 
-proc extract_schema_qualified_name(str: string): (string, string) =
+proc extractSchemaQualifiedName(str: string): (string, string) =
     let r = str.findAndCaptureAll(re"[^`.\s]+|`[^`]*`")
     if r.len > 1:
         result = (r[0],r[1])
@@ -20,8 +20,8 @@ proc extract_schema_qualified_name(str: string): (string, string) =
         result = ("", r[0])
 
 
-proc quoted_scope*(name = "", typ = ""): Scope =
-    let (schema, name) = extract_schema_qualified_name(name)
+proc quotedScope*(name = "", typ = ""): Scope =
+    let (schema, name) = extractSchemaQualifiedName(name)
 
     result.schema = if schema.len > 0: quote(schema) else: "database()"
     if name.len > 0:
@@ -30,20 +30,20 @@ proc quoted_scope*(name = "", typ = ""): Scope =
         result.typ = quote(typ)
 
 
-proc extract_new_default_value*(change:Change) :string =
+proc extractNewDefaultValue*(change:Change) :string =
     change.to
     
-proc extract_new_default_value*(change:string) :string =
+proc extractNewDefaultValue*(change:string) :string =
     change
 
-proc extract_new_comment_value*(change:Change):string = extract_new_default_value(change)
-proc extract_new_comment_value*(change:string):string = extract_new_default_value(change)
+proc extractNewCommentValue*(change:Change):string = extractNewDefaultValue(change)
+proc extractNewCommentValue*(change:string):string = extractNewDefaultValue(change)
 
-proc row_format_dynamic_by_default*[T](self: ptr MysqlAdapterRef[T]):bool =
+proc rowFormatDynamicByDefault*[T](self: ptr MysqlAdapterRef[T]):bool =
     if self.mariadb:
-        self.database_version >= "10.2.2"
+        self.databaseVersion >= "10.2.2"
     else:
-        self.database_version >= "5.7.9"
+        self.databaseVersion >= "5.7.9"
 
 when isMainModule:
-    echo extract_schema_qualified_name("`aaa`.`bb`")
+    echo extractSchemaQualifiedName("`aaa`.`bb`")

@@ -2,31 +2,31 @@ import ../../common
 import regex
 import db_common
 import sequtils,strutils
-# https://github.com/rails/rails/blob/98a57aa5f610bc66af31af409c72173cdeeb3c9e/activerecord/lib/active_record/connection_adapters/mysql/database_statements.rb
-const DEFAULT_READ_QUERY = ["begin","commit", "explain", "release", "rollback", "savepoint", "select", "with"]
+# https://github.com/rails/rails/blob/98a57aa5f610bc66af31af409c72173cdeeb3c9e/activerecord/lib/activeRecord/connectionAdapters/mysql/databaseStatements.rb
+const dEFAULTREADQUERY = ["begin","commit", "explain", "release", "rollback", "savepoint", "select", "with"]
 
-const COMMENT_REGEX = r"\*(?:[^\*]|\*[^/])*\*"
+const cOMMENTREGEX = r"\*(?:[^\*]|\*[^/])*\*"
 
-proc build_read_query_regexp(args:varargs[string]): Regex =
+proc buildReadQueryRegexp(args:varargs[string]): Regex =
     var parts = newSeq[string]()
     parts.add args
-    parts.add DEFAULT_READ_QUERY
-    re (r"\A(?:[\(\s]|" & COMMENT_REGEX & ")*" & parts.mapIt( "((?i)" & it & ")" ).join("|") )
+    parts.add dEFAULTREADQUERY
+    re (r"\A(?:[\(\s]|" & cOMMENTREGEX & ")*" & parts.mapIt( "((?i)" & it & ")" ).join("|") )
 
-let READ_QUERY = build_read_query_regexp("begin", "commit", "explain", "select", "set", "show", "release", "savepoint", "rollback")
+let rEADQUERY = buildReadQueryRegexp("begin", "commit", "explain", "select", "set", "show", "release", "savepoint", "rollback")
 
-proc write_query(sql:string): bool =
+proc writeQuery(sql:string): bool =
     
-    not sql.contains(READ_QUERY)
+    not sql.contains(rEADQUERY)
 
-proc write_query*[T](self: ptr MysqlAdapterRef[T],sql:SqlQuery): bool =
-    write_query(sql.string)
+proc writeQuery*[T](self: ptr MysqlAdapterRef[T],sql:SqlQuery): bool =
+    writeQuery(sql.string)
 
-proc max_allowed_packet*[T](self: ptr MysqlAdapterRef[T]): string =
-    self.show_variable("max_allowed_packet")
+proc maxAllowedPacket*[T](self: ptr MysqlAdapterRef[T]): string =
+    self.showVariable("maxAllowedPacket")
    
 
 when isMainModule:
-    assert write_query("SELECT * FROM") == false
-    assert write_query("DROP INDEX") == true
+    assert writeQuery("SELECT * FROM") == false
+    assert writeQuery("DROP INDEX") == true
 

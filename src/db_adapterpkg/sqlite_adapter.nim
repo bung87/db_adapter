@@ -5,58 +5,58 @@ import macros
 import ./utils
 import sequtils
 
-# https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters/sqlite3_adapter.rb
+# https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/activeRecord/connectionAdapters/sqlite3Adapter.rb
 
 
 
-# https://github.com/nim-lang/Nim/blob/version-1-0/lib/impure/db_sqlite.nim#L306
-# https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/active_record/connection_adapters/sqlite3_adapter.rb#L64
-proc get_database_version*[T](self: ptr SqliteAdapterRef[T]): Version {.
-        cached_property: "database_version", tags: [ReadDbEffect].} =
-    Version(self.conn.getValue(sql"SELECT sqlite_version(*);"))
+# https://github.com/nim-lang/Nim/blob/version-1-0/lib/impure/dbSqlite.nim#L306
+# https://github.com/rails/rails/blob/f33d52c95217212cbacc8d5e44b5a8e3cdc6f5b3/activerecord/lib/activeRecord/connectionAdapters/sqlite3Adapter.rb#L64
+proc getDatabaseVersion*[T](self: ptr SqliteAdapterRef[T]): Version {.
+        cachedProperty: "databaseVersion", tags: [ReadDbEffect].} =
+    Version(self.conn.getValue(sql"SELECT sqliteVersion(*);"))
 
-proc database_exists*[T](self: ptr SqliteAdapterRef[T]): bool =
+proc databaseExists*[T](self: ptr SqliteAdapterRef[T]): bool =
     if self.config[].host == ":memory:":
         return true
     else:
         return fileExists(self.config[].host)
-# database_version in schema_cache https://github.com/rails/rails/blob/96289cfb9b6aeb8f1a917f892148fd47f2f2049a/activerecord/lib/active_record/connection_adapters/schema_cache.rb#L33
-proc supports_ddl_transactions*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_savepoints*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_expression_index*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.database_version >= "3.9.0"
-proc requires_reloading*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_foreign_keys*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_views*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_datetime_with_precision*[T](self: ptr SqliteAdapterRef[
+# databaseVersion in schemaCache https://github.com/rails/rails/blob/96289cfb9b6aeb8f1a917f892148fd47f2f2049a/activerecord/lib/activeRecord/connectionAdapters/schemaCache.rb#L33
+proc supportsDdlTransactions*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsSavepoints*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsExpressionIndex*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.databaseVersion >= "3.9.0"
+proc requiresReloading*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsForeignKeys*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsViews*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsDatetimeWithPrecision*[T](self: ptr SqliteAdapterRef[
         T]): bool = true
-proc supports_json*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_common_table_expressions*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.database_version >= "3.8.3"
-proc supports_insert_on_conflict*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.database_version >= "3.24.0"
-proc supports_insert_on_duplicate_skip*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.supports_insert_on_conflict
-proc supports_insert_on_duplicate_update*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.supports_insert_on_conflict
-proc supports_insert_conflict_target*[T](self: ptr SqliteAdapterRef[
-        T]): bool = self.supports_insert_on_conflict
-proc supports_index_sort_order*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsJson*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsCommonTableExpressions*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.databaseVersion >= "3.8.3"
+proc supportsInsertOnConflict*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.databaseVersion >= "3.24.0"
+proc supportsInsertOnDuplicateSkip*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.supportsInsertOnConflict
+proc supportsInsertOnDuplicateUpdate*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.supportsInsertOnConflict
+proc supportsInsertConflictTarget*[T](self: ptr SqliteAdapterRef[
+        T]): bool = self.supportsInsertOnConflict
+proc supportsIndexSortOrder*[T](self: ptr SqliteAdapterRef[T]): bool = true
 proc encoding*[T](self: ptr SqliteAdapterRef[T]): string {.tags: [
         ReadDbEffect].} = self.conn.getValue(sql"PRAGMA encoding;")
-proc supports_explain*[T](self: ptr SqliteAdapterRef[T]): bool = true
-proc supports_lazy_transactions*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsExplain*[T](self: ptr SqliteAdapterRef[T]): bool = true
+proc supportsLazyTransactions*[T](self: ptr SqliteAdapterRef[T]): bool = true
 
 
-template disable_referential_integrity*[T](self: ptr SqliteAdapterRef[T],
+template disableReferentialIntegrity*[T](self: ptr SqliteAdapterRef[T],
         body: untyped) =
-    let old_foreign_keys = self.conn.getValue(sql"PRAGMA foreign_keys")
-    let old_defer_foreign_keys = self.conn.getValue(sql"PRAGMA defer_foreign_keys")
-    self.conn.exec(sql"PRAGMA defer_foreign_keys = ON")
-    self.conn.exec(sql"PRAGMA foreign_keys = OFF")
+    let oldForeignKeys = self.conn.getValue(sql"PRAGMA foreignKeys")
+    let oldDeferForeignKeys = self.conn.getValue(sql"PRAGMA deferForeignKeys")
+    self.conn.exec(sql"PRAGMA deferForeignKeys = ON")
+    self.conn.exec(sql"PRAGMA foreignKeys = OFF")
     body
-    self.conn.exec(sql"PRAGMA defer_foreign_keys = ?", old_defer_foreign_keys)
-    self.conn.exec(sql"PRAGMA foreign_keys = ?", old_foreign_keys)
+    self.conn.exec(sql"PRAGMA deferForeignKeys = ?", oldDeferForeignKeys)
+    self.conn.exec(sql"PRAGMA foreignKeys = ?", oldForeignKeys)
 
 # DATABASE STATEMENTS ======================================
 
@@ -71,46 +71,46 @@ proc explain*[T](self: ptr SqliteAdapterRef[T], query: SqlQuery, args: varargs[
 
 # SCHEMA STATEMENTS ========================================
 
-proc table_create_statment*[T](self: ptr SqliteAdapterRef[T],
-        table_name: string): string{.tags: [ReadDbEffect].} =
+proc tableCreateStatment*[T](self: ptr SqliteAdapterRef[T],
+        tableName: string): string{.tags: [ReadDbEffect].} =
     # Result will have following sample string
     # CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    #                       "password_digest" varchar COLLATE "NOCASE");
+    #                       "passwordDigest" varchar COLLATE "NOCASE");
     let rows = self.conn.getAllRows(sql(
             """SELECT sql FROM
-              (SELECT * FROM sqlite_master UNION ALL
-               SELECT * FROM sqlite_temp_master)
-            WHERE type = 'table' AND name = ? """), table_name)
+              (SELECT * FROM sqliteMaster UNION ALL
+               SELECT * FROM sqliteTempMaster)
+            WHERE type = 'table' AND name = ? """), tableName)
     result = rows[0].join("") & ";"
 
-proc table_structure*[T](self: ptr SqliteAdapterRef[T],
-        table_name: string): seq[seq[string]] {.tags: [ReadDbEffect].} =
+proc tableStructure*[T](self: ptr SqliteAdapterRef[T],
+        tableName: string): seq[seq[string]] {.tags: [ReadDbEffect].} =
     # @[@["0", "id", "INTEGER", "0", "", "0"], @["1", "name", "VARCHAR(50)", "1", "", "0"]]
-    # cid      name          type     notnull  dflt_value  pk
-    result = self.conn.getAllRows(sql"PRAGMA table_info(?)", table_name)
+    # cid      name          type     notnull  dfltValue  pk
+    result = self.conn.getAllRows(sql"PRAGMA tableInfo(?)", tableName)
 
 
-proc table_indexs*[T](self: ptr SqliteAdapterRef[T], table_name: string): seq[
+proc tableIndexs*[T](self: ptr SqliteAdapterRef[T], tableName: string): seq[
         seq[string]] {.tags: [ReadDbEffect].} =
-    # type                    name                tbl_name    rootpage    sql
-    result = self.conn.getAllRows(sql"SELECT * FROM sqlite_master WHERE type = ? AND tbl_name = ? ",
-            "index", table_name)
+    # type                    name                tblName    rootpage    sql
+    result = self.conn.getAllRows(sql"SELECT * FROM sqliteMaster WHERE type = ? AND tblName = ? ",
+            "index", tableName)
 
 
-# proc table_structure(table_name)
-#     structure = exec_query("PRAGMA table_info(?)",table_name)
-#     # raise(ActiveRecord::StatementInvalid, "Could not find table '#{table_name}'") if structure.empty?
-#     table_structure_with_collation(table_name, structure)
+# proc tableStructure(tableName)
+#     structure = execQuery("PRAGMA tableInfo(?)",tableName)
+#     # raise(ActiveRecord::StatementInvalid, "Could not find table '#{tableName}'") if structure.empty?
+#     tableStructureWithCollation(tableName, structure)
 # end
-proc primary_keys*[T](self: ptr SqliteAdapterRef[T], table_name: string): seq[
+proc primaryKeys*[T](self: ptr SqliteAdapterRef[T], tableName: string): seq[
         string] {.tags: [ReadDbEffect].} =
-    let rows = self.table_structure(table_name)
+    let rows = self.tableStructure(tableName)
     result = rows.filterIt(it[5] == "1").mapIt(it[1])
 
-proc remove_index*[T](self: ptr SqliteAdapterRef[T], index_name: string) {.
+proc removeIndex*[T](self: ptr SqliteAdapterRef[T], indexName: string) {.
         tags: [WriteDbEffect].} =
-    self.conn.exec sql("DROP INDEX " & index_name)
+    self.conn.exec sql("DROP INDEX " & indexName)
 
-proc foreign_keys*[T](self: ptr SqliteAdapterRef[T], table_name: string): seq[
+proc foreignKeys*[T](self: ptr SqliteAdapterRef[T], tableName: string): seq[
         seq[string]] {.tags: [ReadDbEffect].} =
-    self.conn.getAllRows(sql"PRAGMA foreign_key_list(?)", table_name)
+    self.conn.getAllRows(sql"PRAGMA foreignKeyList(?)", tableName)
