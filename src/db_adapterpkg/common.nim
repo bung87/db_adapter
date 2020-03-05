@@ -1,6 +1,7 @@
 {.experimental: "dotOperators".}
 import ./utils
 import db_common
+import strformat
 export utils
 type 
     DriverKind* {.pure.} = enum
@@ -21,6 +22,11 @@ type
     config*:ptr DbConfigRef
     databaseVersion*:Version
 
+proc validate_index_length*[T](self:ref AbstractAdapter[T],table_name, new_name:string) =
+  # @TODO add allowed_index_name_length property
+  if new_name.len > self.allowed_index_name_length:
+      raise newException(ValueError, fmt("Index name '{new_name}' on table '{table_name}' is too long; the limit is {self.allowed_index_name_length} characters"))
+  
 type PostgresAdapter*[T] = object of AbstractAdapter[T]
 type PostgresAdapterRef*[T] = ref PostgresAdapter[T]
 

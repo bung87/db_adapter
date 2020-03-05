@@ -7,6 +7,7 @@ import terminaltables
 import strutils
 import os, std/monotimes
 import sequtils
+import strformat
 
 include private/mysql/schema_statements
 include private/mysql/quoting
@@ -29,7 +30,7 @@ type Options = object
 proc versionString(fullVersionString: string): string =
     # 5.7.27-0ubuntu0.18.04.1
     var m: regex.RegexMatch
-    discard fullVersionString.match(re"^(?:5\.5\.5-)?(\d+\.\d+\.\d+)",m)
+    discard fullVersionString.match(re"^(?:5\.5\.5-)?(\d+\.\d+\.\d+)", m)
     fullVersionString[m.group(1)[0]]
 
 proc fullVersion*[T](self: ptr MysqlAdapterRef[T]): string {.
@@ -220,6 +221,37 @@ proc changeTableComment*[T](self: ptr MysqlAdapterRef[T], tableName: string,
     self.conn.exec("ALTER TABLE $1 COMMENT $2" % [quoteTableName(
             tableName), quote(comment)])
 
+# rename_table
+# https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract_mysql_adapter.rb#L298
+proc renameTable*[T](self: ptr MysqlAdapterRef[T], tableName: string,
+new_name: string) =
+    # schema_cache.clear_data_source_cache!(table_name.to_s)
+    # schema_cache.clear_data_source_cache!(new_name.to_s)
+    self.conn.exec("RENAME TABLE $1 TO $2") % [quoteTableName(table_name),
+            quoteTableName(new_name)]
+    # rename_table_indexes(table_name, new_name)
+
+proc dropTable*[T](self: ptr MysqlAdapterRef[T], tableName: string,
+        temporary = false, if_exists = false, force = "") =
+    # schema_cache.clear_data_source_cache!(table_name.to_s)
+    self.conn.exec fmt("DROP{"TEMPORARY" if temporary} TABLE{"IF EXISTS" if if_exists} {quoteTableName(table_name)}{"CASCADE" if force == "cascade"}")
+
+proc renameIndex*[T](self: ptr MysqlAdapterRef[T], tableName, oldName,
+        newName: string){.raises: [ValueError].} =
+    if self.supportsRenameIndex:
+        self.validate_index_length(tableName, newName)
+        self.conn.exec fmt("ALTER TABLE {quoteTableName(tableName)} RENAME INDEX {quoteTableName(oldName)} TO {quoteTableName(new_name)}")
+    else:
+        # super
+        discard
+
+proc changeColumnDefault*[T](self:ptr  MysqlAdapterRef[T],table_name, column_name:string, default_or_changes:Change) =
+    let default = extract_new_default_value(default_or_changes)
+    self.changeColumn table_name, column_name, nil, default: default
+
+# proc changeColumn*[T](self:ptr  MysqlAdapterRef[T],table_name, column_name:string, typ, options = {}) =
+#     self.conn.exec(fmt("ALTER TABLE {quoteTableName(table_name)} {change_column_for_alter(table_name, column_name, typ, options)}"))
+    
 # SHOW VARIABLES LIKE 'name'
 proc showVariable*[T](self: ptr MysqlAdapterRef[T], name: string): string =
     self.conn.getValue(sql("SELECT @@" & name))
@@ -239,7 +271,7 @@ proc primaryKeys*[T](self: ptr MysqlAdapterRef[T], tableName: string): seq[
         string]{.tags: [ReadDbEffect].} =
 
     let scope = quotedScope(tableName)
-    
+
     let rows = self.conn.getAllRows sql """
       SELECT columnName
       FROM informationSchema.statistics
@@ -250,14 +282,15 @@ proc primaryKeys*[T](self: ptr MysqlAdapterRef[T], tableName: string): seq[
     """ % [scope.schema, scope.name]
     result = rows.mapIt(it[0])
 
-proc strictMode*[T](self: ptr MysqlAdapterRef[T]):bool =
+proc strictMode*[T](self: ptr MysqlAdapterRef[T]): bool =
     self.config.strict == "true"
 
 proc checkVersion*[T](self: ptr MysqlAdapterRef[T]) =
     if self.databaseVersion < "5.5.8":
-      raise newException(ValueError,"Your version of MySQL ($1) is too old. Active Record supports MySQL >= 5.5.8." % self.databaseVersion)
+        raise newException(ValueError, "Your version of MySQL ($1) is too old. Active Record supports MySQL >= 5.5.8." %
+                self.databaseVersion)
 
 when isMainModule:
     let adapter = new MysqlAdapterRef[dbMysql.DbConn]
-    adapter.conn = dbMysql.open("localhost","","","cms")
+    adapter.conn = dbMysql.open("localhost", "", "", "cms")
     echo adapter.unsafeAddr.primaryKeys("authUser")
