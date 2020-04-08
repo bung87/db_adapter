@@ -120,10 +120,7 @@ digraph G {
           <tr>
          <td>discard!</td>
          </tr>
-
-           <tr>
-         <td>discard!</td>
-         </tr>
+        
         <tr>
          <td>private</td>
          </tr>
@@ -334,9 +331,7 @@ digraph G {
               <td>foreign_keys(table_name) </td>
          </tr>
 
-             <tr>
-              <td>foreign_keys(table_name) </td>
-         </tr>
+        
         <tr>
               <td>table_options(table_name) </td>
          </tr>
