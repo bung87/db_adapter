@@ -1,0 +1,544 @@
+# http://www.graphviz.org/
+
+digraph G {
+    rank=same
+    rankdir=LR
+    
+
+	 abstract_adapter 
+		[shape=none,label = <<table border="0" cellspacing="0" cellborder="1">
+	 
+		<tr><td>abstract_adapter</td></tr>
+	  
+             <tr>
+              <td>self.quoted_column_names</td>
+              
+             </tr>
+             <tr>
+              <td>self.quoted_table_names</td>
+            
+             </tr>
+             <tr>
+              <td>self.quoted_table_names</td>
+             </tr>
+            <tr>
+              <td>preventing_writes?</td>
+             </tr>
+             <tr>
+              <td>migrations_paths</td>
+             </tr>
+              <tr>
+              <td>schema_migration</td>
+             </tr>
+             <tr>
+              <td>prepared_statements</td>
+             </tr>
+              <tr>
+              <td>prepared_statements_disabled_cache</td>
+             </tr>
+              <tr>
+              <td>class Version</td>
+             </tr>
+              <tr>
+              <td>expire</td>
+             </tr>
+              <tr>
+              <td>steal!</td>
+             </tr>
+              <tr>
+              <td>adapter_name</td>
+             </tr>
+              <tr>
+              <td>self.database_exists?</td>
+             </tr>
+             <tr>
+              <td>supports_ddl_transactions?</td>
+             </tr>
+              <tr>
+              <td>supports_bulk_alter?</td>
+             </tr>
+              <tr>
+              <td>supports_savepoints?</td>
+             </tr>
+              <tr>
+              <td>supports_advisory_locks?</td>
+             </tr>
+              <tr>
+              <td>prefetch_primary_key?</td>
+             </tr>
+               <tr>
+              <td>...</td>
+             </tr>
+        </table>>];
+	    
+    	
+	
+		
+	
+	
+	 mysql2_adapter 
+	    [shape=none,
+	   label =  <<table border="0" cellspacing="0" cellborder="1">
+	     <tr>
+              <td>mysql2_adapter</td>
+         </tr>
+       
+	     <tr>
+              <td>self.database_exists?</td>
+         </tr>
+          <tr>
+              <td>self.supports_json?</td>
+         </tr>
+           <tr>
+              <td>self.supports_comments?</td>
+         </tr>
+          <tr>
+              <td>self.supports_comments_in_create?</td>
+         </tr>
+          <tr>
+              <td>self.supports_savepoints?</td>
+         </tr>
+                   <tr>
+              <td>self.supports_lazy_transactions?</td>
+         </tr>
+         <tr>
+         <td>active?</td>
+         </tr>
+
+          <tr>
+         <td>reconnect!</td>
+         </tr>
+
+          <tr>
+         <td>alias :reset! :reconnect!</td>
+         </tr>
+
+          <tr>
+         <td>disconnect!</td>
+         </tr>
+
+          <tr>
+         <td>discard!</td>
+         </tr>
+
+           <tr>
+         <td>discard!</td>
+         </tr>
+        <tr>
+         <td>private</td>
+         </tr>
+
+          <tr>
+         <td>connect</td>
+         </tr>
+
+     <tr>
+         <td>configure_connection</td>
+         </tr>
+	   <tr>
+         <td>full_version</td>
+         </tr>
+	   <tr>
+         <td>get_full_version</td>
+         </tr>
+            <tr>
+         <td>translate_exception</td>
+         </tr>
+	    </table>>];
+    
+    
+  abstract_mysql_adapter[
+      shape=none,
+      label=<<table border="0" cellspacing="0" cellborder="1">
+      <tr>
+              <td>abstract_mysql_adapter</td>
+         </tr>
+       <tr>
+              <td>get_database_version</td>
+         </tr>
+           <tr>
+              <td>mariadb?</td>
+         </tr>
+          <tr>
+              <td>supports_bulk_alter?</td>
+         </tr>
+         <tr>
+              <td>supports_index_sort_order?</td>
+         </tr>
+          <tr>
+              <td>supports_expression_index?</td>
+         </tr>
+
+          <tr>
+              <td>supports_transaction_isolation?</td>
+         </tr>
+
+           <tr>
+              <td>supports_explain?</td>
+         </tr>
+
+          <tr>
+              <td>supports_indexes_in_create?</td>
+         </tr>
+
+           <tr>
+              <td>supports_foreign_keys?</td>
+         </tr>
+          <tr>
+              <td>supports_views?</td>
+         </tr>
+
+          <tr>
+              <td>supports_datetime_with_precision?</td>
+         </tr>
+
+
+          <tr>
+              <td>supports_optimizer_hints?</td>
+         </tr>
+
+          <tr>
+              <td>supports_common_table_expressions?</td>
+         </tr>
+
+          <tr>
+              <td>supports_advisory_locks?</td>
+         </tr>
+          <tr>
+              <td>supports_insert_on_duplicate_skip?</td>
+         </tr>
+                   <tr>
+              <td>supports_insert_on_duplicate_update?</td>
+         </tr>
+        <tr>
+              <td>get_advisory_lock</td>
+         </tr>
+
+            <tr>
+              <td>release_advisory_lock</td>
+         </tr>
+
+           <tr>
+              <td>native_database_types</td>
+         </tr>
+
+               <tr>
+              <td>index_algorithms</td>
+         </tr>
+
+        <tr>
+              <td>disable_referential_integrity</td>
+         </tr>
+
+
+  <tr>
+              <td>clear_cache!</td>
+         </tr>
+  <tr>
+              <td>execute(sql, name = nil)</td>
+         </tr>
+  <tr>
+              <td>execute_and_free(sql, name = nil) </td>
+         </tr>
+           <tr>
+              <td>begin_db_transaction</td>
+         </tr>
+           <tr>
+              <td>begin_isolated_db_transaction(isolation)</td>
+         </tr>
+
+           <tr>
+              <td>commit_db_transaction</td>
+         </tr>
+
+           <tr>
+              <td>exec_rollback_db_transaction</td>
+         </tr>
+
+           <tr>
+              <td>empty_insert_statement_value(primary_key = nil)</td>
+         </tr>
+           <tr>
+              <td>recreate_database(name, options = {})</td>
+         </tr>
+
+           <tr>
+              <td> create_database(name, options = {})</td>
+         </tr>
+           <tr>
+              <td>drop_database(name)</td>
+         </tr>
+
+   <tr>
+              <td>current_database</td>
+         </tr>
+
+            <tr>
+              <td>charset</td>
+         </tr>
+
+            <tr>
+              <td>table_comment(table_name)</td>
+         </tr>
+
+            <tr>
+              <td>change_table_comment(table_name, comment_or_changes)</td>
+         </tr>
+
+              <tr>
+              <td>rename_table(table_name, new_name)</td>
+         </tr>
+
+      <tr>
+              <td>drop_table(table_name, options = {})</td>
+         </tr>
+
+      <tr>
+              <td> rename_index(table_name, old_name, new_name)</td>
+         </tr>
+
+      <tr>
+              <td>change_column_default(table_name, column_name, default_or_changes)</td>
+         </tr>
+
+    <tr>
+              <td> change_column_null(table_name, column_name, null, default = nil) </td>
+         </tr>
+
+    <tr>
+              <td>change_column_comment(table_name, column_name, comment_or_changes</td>
+         </tr>
+
+
+    <tr>
+              <td>change_column(table_name, column_name, type, options = {})</td>
+         </tr>
+
+
+    <tr>
+              <td>rename_column(table_name, column_name, new_column_name)</td>
+         </tr>
+
+
+    <tr>
+              <td>add_index(table_name, column_name, options = {}) </td>
+         </tr>
+
+    <tr>
+              <td>add_index(table_name, column_name, options = {}) </td>
+         </tr>
+             <tr>
+              <td>add_sql_comment!(sql, comment)  </td>
+         </tr>
+             <tr>
+              <td>foreign_keys(table_name) </td>
+         </tr>
+
+             <tr>
+              <td>foreign_keys(table_name) </td>
+         </tr>
+        <tr>
+              <td>table_options(table_name) </td>
+         </tr>
+
+        <tr>
+              <td>show_variable(name)</td>
+         </tr>
+
+           <tr>
+              <td>primary_keys(table_name) </td>
+         </tr>
+
+
+           <tr>
+              <td>default_uniqueness_comparison(attribute, value, klass) </td>
+         </tr>
+
+           <tr>
+              <td>case_sensitive_comparison(attribute, value)</td>
+         </tr>
+
+           <tr>
+              <td> can_perform_case_insensitive_comparison_for?(column)</td>
+         </tr>
+
+          <tr>
+              <td>columns_for_distinct(columns, orders)</td>
+         </tr>
+  <tr>
+              <td>strict_mode?</td>
+         </tr>
+
+  <tr>
+              <td>default_index_type?(index) </td>
+         </tr>
+
+           <tr>
+              <td>build_insert_sql(insert)</td>
+         </tr>
+
+           <tr>
+              <td>check_version</td>
+         </tr>
+
+           <tr>
+              <td>private</td>
+         </tr>
+           <tr>
+              <td>initialize_type_map(m = type_map)</td>
+         </tr>
+
+           <tr>
+              <td>register_integer_type(mapping, key, **options)</td>
+         </tr>
+
+           <tr>
+              <td>extract_precision(sql_type)</td>
+         </tr>
+
+
+           <tr>
+              <td>translate_exception(exception, message:, sql:, binds:)</td>
+         </tr>
+
+           <tr>
+              <td>change_column_for_alter(table_name, column_name, type, options = {})</td>
+         </tr>
+
+        <tr>
+              <td>rename_column_for_alter(table_name, column_name, new_column_name)</td>
+         </tr>
+
+        <tr>
+              <td>add_index_for_alter(table_name, column_name, options = {})</td>
+         </tr>
+
+           <tr>
+              <td>remove_index_for_alter(table_name, column_name = nil, options = {})</td>
+         </tr>
+
+           <tr>
+              <td>supports_rename_index?</td>
+         </tr>
+
+           <tr>
+              <td>configure_connection</td>
+         </tr>
+
+           <tr>
+              <td>column_definitions(table_name) </td>
+         </tr>
+
+
+           <tr>
+              <td>create_table_info(table_name)</td>
+         </tr>
+
+
+           <tr>
+              <td>arel_visitor</td>
+         </tr>
+
+
+           <tr>
+              <td>build_statement_pool</td>
+         </tr>
+
+
+          <tr>
+              <td>mismatched_foreign_key(message, sql:, binds:)</td>
+         </tr>
+
+          <tr>
+              <td>version_string(full_version_string)</td>
+         </tr>
+
+          <tr>
+              <td>build_statement_pool</td>
+         </tr>
+
+       </table>>];
+
+ 
+
+mysql_database_statements[
+      shape=none,
+      label=<<table border="0" cellspacing="0" cellborder="1">
+      <tr>
+              <td>mysql_database_statements</td>
+         </tr>
+       <tr>
+              <td>select_all</td>
+         </tr>
+           <tr>
+              <td>query(sql, name = nil)</td>
+         </tr>
+          <tr>
+              <td> write_query?(sql)</td>
+         </tr>
+
+          <tr>
+              <td> explain(arel, binds = [])</td>
+         </tr>
+
+          <tr>
+              <td> execute(sql, name = nil)</td>
+         </tr>
+
+          <tr>
+              <td>exec_query(sql, name = "SQL", binds = [], prepare: false)</td>
+         </tr>
+
+        <tr>
+              <td>exec_delete(sql, name = nil, binds = [])</td>
+         </tr>
+
+     <tr>
+              <td>private</td>
+         </tr>
+
+     <tr>
+              <td> execute_batch(statements, name = nil)</td>
+         </tr>
+
+  <tr>
+              <td> default_insert_value(column)</td>
+         </tr>
+
+
+  <tr>
+              <td> last_inserted_id(result)</td>
+         </tr>
+ <tr>
+              <td> multi_statements_enabled?</td>
+         </tr>
+
+          <tr>
+              <td> with_multi_statements</td>
+         </tr>
+
+           <tr>
+              <td> combine_multi_statements(total_sql)</td>
+         </tr>
+
+  <tr>
+              <td> max_allowed_packet_reached?(current_packet, previous_packet)</td>
+         </tr>
+
+           <tr>
+              <td> max_allowed_packet</td>
+         </tr>
+
+            <tr>
+              <td> exec_stmt_and_free(sql, name, binds, cache_stmt: false)</td>
+         </tr>
+
+            <tr>
+              <td> exec_stmt_and_free(sql, name, binds, cache_stmt: false)</td>
+         </tr>
+       </table>>];
+
+       abstract_adapter -> mysql2_adapter;
+    abstract_mysql_adapter -> mysql2_adapter;
+    mysql_database_statements -> mysql2_adapter;
+}
