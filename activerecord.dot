@@ -528,9 +528,7 @@ mysql_database_statements[
               <td> exec_stmt_and_free(sql, name, binds, cache_stmt: false)</td>
          </tr>
 
-            <tr>
-              <td> exec_stmt_and_free(sql, name, binds, cache_stmt: false)</td>
-         </tr>
+          
        </table>>];
 
        abstract_adapter -> mysql2_adapter;
