@@ -249,8 +249,16 @@ proc changeColumnDefault*[T](self:ptr  MysqlAdapterRef[T],table_name, column_nam
     let default = extract_new_default_value(default_or_changes)
     self.changeColumn table_name, column_name, nil, default: default
 
-# proc changeColumn*[T](self:ptr  MysqlAdapterRef[T],table_name, column_name:string, typ, options = {}) =
-#     self.conn.exec(fmt("ALTER TABLE {quoteTableName(table_name)} {change_column_for_alter(table_name, column_name, typ, options)}"))
+proc changeColumn*[T](self:ptr  MysqlAdapterRef[T],table_name, column_name:string, typ:string, options = {}) =
+    self.conn.exec(fmt("ALTER TABLE {quoteTableName(table_name)} {change_column_for_alter(table_name, column_name, typ, options)}"))
+
+proc changeColumnForAlter*[T](self:ptr  MysqlAdapterRef[T],table_name, column_name:string, typ:string, options = {}) =
+    let column = column_for(table_name,column_name)
+    let typ = typ ? typ : column.sql_type
+
+    let td = createTableDefinition(table_name)
+    cd = td.newColumnDefinition(column.name,typ,options)
+    schema_creation.accept(new ChangeColumnDefinition(cd, column.name))
     
 # SHOW VARIABLES LIKE 'name'
 proc showVariable*[T](self: ptr MysqlAdapterRef[T], name: string): string =

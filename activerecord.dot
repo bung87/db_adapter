@@ -321,9 +321,7 @@ digraph G {
               <td>add_index(table_name, column_name, options = {}) </td>
          </tr>
 
-    <tr>
-              <td>add_index(table_name, column_name, options = {}) </td>
-         </tr>
+
              <tr>
               <td>add_sql_comment!(sql, comment)  </td>
          </tr>
